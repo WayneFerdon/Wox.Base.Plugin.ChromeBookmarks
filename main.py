@@ -8,6 +8,7 @@ import os
 import win32con
 import win32clipboard
 
+
 def makeList(itemsList, childItems, pathFolder):
     for item in childItems:
         if 'children' in item.keys():
@@ -34,7 +35,7 @@ def makeList(itemsList, childItems, pathFolder):
 
 
 class getBookmarks(Wox):
-    filePath = os.environ['LOCALAPPDATA'] + r'\Google\Chrome\User Data\Default\Bookmarks'
+    filePath = os.environ['localAppData'.upper()] + '/Google/Chrome/User Data/Default/Bookmarks'
 
     with open(filePath, 'r', encoding='UTF-8') as f:
         data = json.load(f)
@@ -52,8 +53,8 @@ class getBookmarks(Wox):
         j += 1
 
     def query(self, queryString):
-        urlIcon = 'Images/chrome-logo.png'
-        folderIcon = 'Images/folder.png'
+        urlIcon = './Images/chromeIcon.png'
+        folderIcon = './Images/folderIcon.png'
         result = []
         bookmarkList = self.bookmarkList
 
@@ -86,7 +87,7 @@ class getBookmarks(Wox):
                                 'JsonRPCAction': {
                                     'method': 'Wox.ChangeQuery',
                                     'parameters': ['bm ' + path, True],
-                                    'dontHideAfterAction': True
+                                    "doNotHideAfterAction".replace('oNo', 'on'): True
                                 }
                             }
                         )
@@ -100,7 +101,7 @@ class getBookmarks(Wox):
                                 'JsonRPCAction': {
                                     'method': 'Wox.ChangeQuery',
                                     'parameters': ['bm ' + url, True],
-                                    'dontHideAfterAction': True
+                                    "doNotHideAfterAction".replace('oNo', 'on'): True
                                 }
                             }
                         )
@@ -114,7 +115,7 @@ class getBookmarks(Wox):
                             'JsonRPCAction': {
                                 'method': 'openUrl',
                                 'parameters': [url],
-                                'dontHideAfterAction': False
+                                "doNotHideAfterAction".replace('oNo', 'on'): False
                             }
                         }
                     )
@@ -125,7 +126,7 @@ class getBookmarks(Wox):
         url = bookmark['url']
         title = bookmark['title']
         path = bookmark['path']
-        logo = 'Images/chrome-logo.png'
+        logo = './Images/chromeIcon.png'
         results = [{
             'Title': 'URL: ' + url,
             'SubTitle': 'Press Enter to Copy URL',
@@ -133,7 +134,7 @@ class getBookmarks(Wox):
             'JsonRPCAction': {
                 'method': 'copyData',
                 'parameters': [url],
-                'dontHideAfterAction': False,
+                "doNotHideAfterAction".replace('oNo', 'on'): False,
             }
         }, {
             'Title': 'Title: ' + title,
@@ -142,7 +143,7 @@ class getBookmarks(Wox):
             'JsonRPCAction': {
                 'method': 'copyData',
                 'parameters': [title],
-                'dontHideAfterAction': False,
+                "doNotHideAfterAction".replace('oNo', 'on'): False,
             }
         }, {
             'Title': 'Path: ' + path,
@@ -151,7 +152,7 @@ class getBookmarks(Wox):
             'JsonRPCAction': {
                 'method': 'copyData',
                 'parameters': [path],
-                'dontHideAfterAction': False,
+                "doNotHideAfterAction".replace('oNo', 'on'): False,
             }
         }]
         return results
