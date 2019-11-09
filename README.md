@@ -1,0 +1,2 @@
+# Wox.Plugin.ChromeBookmarks
+ 
