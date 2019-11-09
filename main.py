@@ -34,7 +34,7 @@ def makeList(itemsList, childItems, pathFolder):
 
 
 class getBookmarks(Wox):
-    filePath = r'C:\Users\WayneFerdon\AppData\Local\Google\Chrome\User Data\Default\Bookmarks'
+    filePath = os.environ['LOCALAPPDATA'] + r'\Google\Chrome\User Data\Default\Bookmarks'
 
     with open(filePath, 'r', encoding='UTF-8') as f:
         data = json.load(f)
