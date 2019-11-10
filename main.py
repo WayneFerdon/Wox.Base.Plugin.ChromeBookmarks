@@ -45,12 +45,12 @@ class getBookmarks(Wox):
     for key in data['roots']:
         listKey.append(key)
 
-    j = 0
+    keyCount = 0
     for root in listKey:
-        if j != 2:
-            childItems = data['roots'][listKey[j]]['children']
+        if keyCount != 2:
+            childItems = data['roots'][listKey[keyCount]]['children']
             bookmarkList = makeList(bookmarkList, childItems, root)
-        j += 1
+        keyCount += 1
 
     def query(self, queryString):
         urlIcon = './Images/chromeIcon.png'
@@ -78,9 +78,9 @@ class getBookmarks(Wox):
                 bookmarkIndex = bookmarkList.index(bookmark)
                 type = bookmark['type']
                 if type == 'folder':
-                    if url == queryString:
+                    if url in queryString:
                         result.insert(0, {
-                                'Title': 'Parent:' + path,
+                                'Title': 'Parent: ' + path,
                                 'SubTitle': 'Press Enter to Return to Parent Folder',
                                 'IcoPath': folderIcon,
                                 'ContextData': bookmarkIndex,
