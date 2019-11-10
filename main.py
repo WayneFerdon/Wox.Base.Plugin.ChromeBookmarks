@@ -11,26 +11,24 @@ import win32clipboard
 
 def makeList(itemsList, childItems, pathFolder):
     for item in childItems:
-        if 'children' in item.keys():
-            if item['type'] == 'folder':
-                folderName = item['name']
-                childPathFolder = pathFolder + '/' + folderName
-                subItem = {
-                    'title': folderName,
-                    'url': childPathFolder,
-                    'path': pathFolder,
-                    'type': 'folder'
-                }
-                itemsList.append(subItem)
-                itemsList = makeList(itemsList, item['children'], childPathFolder)
-        else:
-            subItem = {
+        if item['type'] == 'folder':
+            folderName = item['name']
+            childPathFolder = pathFolder + '/' + folderName
+            itemsList.append({
+                'title': folderName,
+                'url': childPathFolder,
+                'path': pathFolder,
+                'type': 'folder'
+            })
+            itemsList = makeList(itemsList, item['children'], childPathFolder)
+        elif item['type'] == 'url':
+            itemsList.append({
                 'title': item['name'],
                 'url': item['url'],
                 'path': pathFolder,
                 'type': 'bookmark'
             }
-            itemsList.append(subItem)
+            )
     return itemsList
 
 
@@ -41,16 +39,13 @@ class getBookmarks(Wox):
         data = json.load(f)
 
     bookmarkList = []
-    listKey = []
-    for key in data['roots']:
-        listKey.append(key)
-
-    keyCount = 0
-    for root in listKey:
-        if keyCount != 2:
-            childItems = data['roots'][listKey[keyCount]]['children']
-            bookmarkList = makeList(bookmarkList, childItems, root)
-        keyCount += 1
+    for rootKey in data['roots']:
+        root = data['roots'][rootKey]
+        try:
+            childItems = root['children']
+        except BaseException:
+            continue
+        bookmarkList = makeList(bookmarkList, childItems, rootKey)
 
     def query(self, queryString):
         urlIcon = './Images/chromeIcon.png'
@@ -78,47 +73,43 @@ class getBookmarks(Wox):
                 bookmarkIndex = bookmarkList.index(bookmark)
                 type = bookmark['type']
                 if type == 'folder':
-                    if url in queryString:
+                    if url in queryString:  # if already in target folder
                         result.insert(0, {
-                                'Title': 'Parent: ' + path,
-                                'SubTitle': 'Press Enter to Return to Parent Folder',
-                                'IcoPath': folderIcon,
-                                'ContextData': bookmarkIndex,
-                                'JsonRPCAction': {
-                                    'method': 'Wox.ChangeQuery',
-                                    'parameters': ['bm ' + path, True],
-                                    "doNotHideAfterAction".replace('oNo', 'on'): True
-                                }
-                            }
-                        )
-                    else:
-                        result.append(
-                            {
-                                'Title': title,
-                                'SubTitle': url,
-                                'IcoPath': folderIcon,
-                                'ContextData': bookmarkIndex,
-                                'JsonRPCAction': {
-                                    'method': 'Wox.ChangeQuery',
-                                    'parameters': ['bm ' + url, True],
-                                    "doNotHideAfterAction".replace('oNo', 'on'): True
-                                }
-                            }
-                        )
-                elif type == 'bookmark':
-                    result.append(
-                        {
-                            'Title': title,
-                            'SubTitle': url,
-                            'IcoPath': urlIcon,
+                            'Title': 'Parent: ' + path,
+                            'SubTitle': 'Press Enter to Return to Parent Folder',
+                            'IcoPath': folderIcon,
                             'ContextData': bookmarkIndex,
                             'JsonRPCAction': {
-                                'method': 'openUrl',
-                                'parameters': [url],
-                                "doNotHideAfterAction".replace('oNo', 'on'): False
+                                'method': 'Wox.ChangeQuery',
+                                'parameters': ['bm ' + path, True],
+                                "doNotHideAfterAction".replace('oNo', 'on'): True
                             }
                         }
-                    )
+                                      )
+                    else:
+                        result.append({
+                            'Title': title,
+                            'SubTitle': url,
+                            'IcoPath': folderIcon,
+                            'ContextData': bookmarkIndex,
+                            'JsonRPCAction': {
+                                'method': 'Wox.ChangeQuery',
+                                'parameters': ['bm ' + url, True],
+                                "doNotHideAfterAction".replace('oNo', 'on'): True
+                            }
+                        })
+                elif type == 'bookmark':
+                    result.append({
+                        'Title': title,
+                        'SubTitle': url,
+                        'IcoPath': urlIcon,
+                        'ContextData': bookmarkIndex,
+                        'JsonRPCAction': {
+                            'method': 'openUrl',
+                            'parameters': [url],
+                            "doNotHideAfterAction".replace('oNo', 'on'): False
+                        }
+                    })
         return result
 
     def context_menu(self, bookmarkIndex):
@@ -157,10 +148,12 @@ class getBookmarks(Wox):
         }]
         return results
 
-    def openUrl(self, url):
+    @classmethod
+    def openUrl(cls, url):
         webbrowser.open(url)
 
-    def copyData(self, data):
+    @classmethod
+    def copyData(cls, data):
         win32clipboard.OpenClipboard()
         win32clipboard.EmptyClipboard()
         win32clipboard.SetClipboardData(win32con.CF_UNICODETEXT, data)

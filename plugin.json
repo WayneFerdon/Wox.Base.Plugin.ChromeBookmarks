@@ -1,5 +1,5 @@
 {
-    "ID": "2a4e484e-76de-45c3-aea2-b15f5e5c328f",
+    "ID": "2a4e484e-76de-45c4-aea2-b15f5e5c328f",
     "ActionKeyword": "bm",
     "Name": "Chrome Bookmark",
     "Description": "Chrome Bookmark",
@@ -7,6 +7,6 @@
     "Version": "1.0.0",
     "Language": "python",
     "Website": "https://github.com/wayneferdon/",
-    "IcoPath": "./Images/chromeIcon",
+    "IcoPath": "./Images/chromeIcon.png",
     "ExecuteFileName": "main.py"
 }
