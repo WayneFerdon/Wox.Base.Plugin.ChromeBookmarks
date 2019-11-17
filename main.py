@@ -39,7 +39,6 @@ def makeList(itemsList, childItems, pathFolder):
 
 
 class getBookmarks(Wox):
-# class getBookmarks():
     filePath = os.environ['localAppData'.upper()] + '/Google/Chrome/User Data/Default/Bookmarks'
     localAppData = os.environ['localAppData'.upper()]
     dataPath = localAppData + '/Google/Chrome/User Data/Default'
@@ -52,35 +51,37 @@ class getBookmarks(Wox):
     # </editor-fold>
 
     # <editor-fold desc="create icon image temps">
-    favIconBitmapSelectStatement = 'SELECT icon_id, image_data, width, height FROM favicon_bitmaps'
-    favIconsCursor.execute(favIconBitmapSelectStatement)
-    favIconBitmapCursorResults = favIconsCursor.fetchall()
-    favIconBitmapInfoList = []
-    favIconBitmapIdList = []
-    for iconId, imageData, width, height in favIconBitmapCursorResults:
-        if iconId in favIconBitmapIdList:
-            iconIdIndex = favIconBitmapIdList.index(iconId)
-            if width < favIconBitmapInfoList[iconIdIndex][0] or height < favIconBitmapInfoList[iconIdIndex][1]:
+    bitmapSelectStatement = 'SELECT icon_id, image_data, width, height ' \
+                            'FROM favicon_bitmaps'
+    favIconsCursor.execute(bitmapSelectStatement)
+    bitmapCursorResults = favIconsCursor.fetchall()
+    bitmapInfoList = dict()
+    for iconId, imageData, width, height in bitmapCursorResults:
+        if iconId in bitmapInfoList.keys():
+            if width < bitmapInfoList[iconId][0] or height < bitmapInfoList[iconId][1]:
                 continue
         with open('./Images/iconId{}.png'.format(iconId), 'wb') as f:
             f.write(imageData)
-        favIconBitmapIdList.append(iconId)
-        favIconBitmapInfoList.append([width, height])
+        bitmapInfoList.update({iconId: [width, height]})
     # </editor-fold>
 
     # <editor-fold desc="get url icon id"
-    favIconsSelectStatement = 'SELECT page_url, icon_id FROM icon_mapping'
-    favIconsCursor.execute(favIconsSelectStatement)
-    favIconsCursorResults = favIconsCursor.fetchall()
-    netLocationIconList = []
-    netLocationList = []
-    for url, iconId in favIconsCursorResults:
+    urlSelectStatement = 'SELECT page_url, icon_id ' \
+                         'FROM icon_mapping'
+    favIconsCursor.execute(urlSelectStatement)
+    urlCursorResults = favIconsCursor.fetchall()
+    iconList = dict()
+    for url, iconId in urlCursorResults:
         netLocation = urlparse(url).netloc
-        if netLocation in netLocationList:
+        if netLocation in iconList.keys():
             continue
-        netLocationList.append(netLocation)
-        netLocationIconList.append(iconId)
-    # </editor-fold>
+        else:
+            iconList.update(
+                {
+                    netLocation: iconId
+                }
+            )
+        # </editor-fold>
 
     favIconsCursor.close()
 
@@ -92,19 +93,17 @@ class getBookmarks(Wox):
         root = data['roots'][rootKey]
         try:
             childItems = root['children']
-        except BaseException:
+        except Exception:
             continue
         bookmarkList = makeList(bookmarkList, childItems, rootKey)
 
     for index in range(len(bookmarkList)):
         url = bookmarkList[index]['url']
         netLocation = urlparse(url).netloc
-        if netLocation in netLocationList:
-            netLocationIndex = netLocationList.index(netLocation)
-            bookmarkList[index]['iconId'] = netLocationIconList[netLocationIndex]
+        if netLocation in iconList.keys():
+            bookmarkList[index]['iconId'] = iconList[netLocation]
         else:
             bookmarkList[index]['iconId'] = 0
-    # print(bookmarkList)
 
     def query(self, queryString):
         urlIcon = './Images/chromeIcon.png'
