@@ -12,6 +12,30 @@ import shutil
 from urllib.parse import urlparse
 
 
+class regexList:
+    def __init__(self, queryString):
+        queryStringLower = queryString.lower()
+        queryList = queryStringLower.split()
+        self.regexList = list()
+        for query in queryList:
+            # pattern = '.*?'.join(query)
+            # regexList.append(re.compile(pattern))
+            self.regexList.append(re.compile(query))
+
+    def match(self, item):
+        match = True
+        for regex in self.regexList:
+            match = regex.search(item) and match
+        return match
+
+
+def createIcon(bitmapInfoList):
+    for iconId in bitmapInfoList.keys():
+        imageData = bitmapInfoList[iconId]['imageData']
+        with open('./Images/iconId{}.png'.format(iconId), 'wb') as f:
+            f.write(imageData)
+
+
 def makeList(itemsList, childItems, pathFolder):
     for item in childItems:
         if item['type'] == 'folder':
@@ -38,112 +62,171 @@ def makeList(itemsList, childItems, pathFolder):
     return itemsList
 
 
-class getBookmarks(Wox):
-    filePath = os.environ['localAppData'.upper()] + '/Google/Chrome/User Data/Default/Bookmarks'
-    localAppData = os.environ['localAppData'.upper()]
-    dataPath = localAppData + '/Google/Chrome/User Data/Default'
-    favIcons = dataPath + '/Favicons'
-    favIconsToRead = dataPath + '/FaviconsToRead'
-    shutil.copyfile(favIcons, favIconsToRead)
+class chromeCache:
+    def __init__(self):
+        localAppData = os.environ['localAppData'.upper()]
+        self.__dataPath__ = localAppData + '/Google/Chrome/User Data/Default'
+        self.bitmapInfoList, self.iconList = self._iconInfo_()
 
-    # <editor-fold desc="connect to database copy">
-    favIconsCursor = sqlite3.connect(favIconsToRead).cursor()
-    # </editor-fold>
+    def _iconData_(self):
+        favIcons = self.__dataPath__ + '/Favicons'
+        iconData = self.__dataPath__ + '/FaviconsToRead'
+        shutil.copyfile(favIcons, iconData)
+        return iconData
 
-    # <editor-fold desc="create icon image temps">
-    bitmapSelectStatement = 'SELECT icon_id, image_data, width, height ' \
-                            'FROM favicon_bitmaps'
-    favIconsCursor.execute(bitmapSelectStatement)
-    bitmapCursorResults = favIconsCursor.fetchall()
-    bitmapInfoList = dict()
-    for iconId, imageData, width, height in bitmapCursorResults:
-        if iconId in bitmapInfoList.keys():
-            if width < bitmapInfoList[iconId][0] or height < bitmapInfoList[iconId][1]:
-                continue
-        with open('./Images/iconId{}.png'.format(iconId), 'wb') as f:
-            f.write(imageData)
-        bitmapInfoList.update({iconId: [width, height]})
-    # </editor-fold>
+    def _hisData_(self):
+        history = self.__dataPath__ + '/History'
+        hisData = self.__dataPath__ + '/HistoryToRead'
+        shutil.copyfile(history, hisData)
+        return hisData
 
-    # <editor-fold desc="get url icon id"
-    urlSelectStatement = 'SELECT page_url, icon_id ' \
-                         'FROM icon_mapping'
-    favIconsCursor.execute(urlSelectStatement)
-    urlCursorResults = favIconsCursor.fetchall()
-    iconList = dict()
-    for url, iconId in urlCursorResults:
-        netLocation = urlparse(url).netloc
-        if netLocation in iconList.keys():
-            continue
-        else:
-            iconList.update(
+    def _loadBookmarkData_(self):
+        bookmark = self.__dataPath__ + '/Bookmarks'
+        with open(bookmark, 'r', encoding='UTF-8') as f:
+            bookmarkData = json.load(f)
+        return bookmarkData
+
+    def _loadIconData_(self):
+        cursor = sqlite3.connect(self._iconData_()).cursor()
+        bitmapCursorResults = cursor.execute(
+            'SELECT icon_id, image_data, width, height '
+            'FROM favicon_bitmaps'
+        ).fetchall()
+        urlCursorResults = cursor.execute(
+            'SELECT page_url, icon_id '
+            'FROM icon_mapping'
+        ).fetchall()
+        cursor.close()
+        return bitmapCursorResults, urlCursorResults
+
+    def _loadHisData_(self):
+        cursor = sqlite3.connect(self._hisData_()).cursor()
+        hisInfoList = cursor.execute(
+            'SELECT urls.url, urls.title, urls.last_visit_time '
+            'FROM urls, visits '
+            'WHERE urls.id = visits.url'
+        ).fetchall()
+        cursor.close()
+        return hisInfoList
+
+    def _iconInfo_(self):
+        bitmapList, urlList = self._loadIconData_()
+        bitmapInfoList = dict()
+        for iconId, imageData, width, height in bitmapList:
+            if iconId in bitmapInfoList.keys():
+                if (
+                        width < bitmapInfoList[iconId]['width']
+                        or height < bitmapInfoList[iconId]['height']
+                ):
+                    continue
+            bitmapInfoList.update(
                 {
-                    netLocation: iconId
+                    iconId: {
+                        'imageData': imageData,
+                        'width': width,
+                        'height': height
+                    }
                 }
             )
-        # </editor-fold>
+        iconList = dict()
+        for url, iconId in urlList:
+            netLocation = urlparse(url).netloc
+            if netLocation not in iconList.keys():
+                iconList.update(
+                    {
+                        netLocation: iconId
+                    }
+                )
+        return bitmapInfoList, iconList
 
-    favIconsCursor.close()
+    def hisList(self):
+        hisInfoList = self._loadHisData_()
+        iconList = self.iconList
+        hisList = list()
+        items = list()
+        for url, title, lastVisitTime in hisInfoList:
+            item = url + title
+            if item in items:
+                itemIndex = items.index(item)
+                if hisList[itemIndex]['lastVisitTime'] < lastVisitTime:
+                    hisList[itemIndex]['lastVisitTime'] = lastVisitTime
+            else:
+                items.append(item)
+                netLocation = urlparse(url).netloc
+                if netLocation in iconList.keys():
+                    iconId = iconList[netLocation]
+                else:
+                    iconId = 0
+                hisList.append(
+                    {
+                        'url': url,
+                        'title': title,
+                        'item': item,
+                        'lastVisitTime': lastVisitTime,
+                        'iconId': iconId
+                    }
+                )
+        hisList.sort(key=timeFromHisList, reverse=True)
+        return hisList
 
-    with open(filePath, 'r', encoding='UTF-8') as f:
-        data = json.load(f)
+    def bookmarkList(self):
+        bookmarkList = list()
+        data = self._loadBookmarkData_()
+        iconList = self.iconList
+        for root in data['roots']:
+            try:
+                childItems = data['roots'][root]['children']
+            except Exception:
+                continue
+            bookmarkList = makeList(bookmarkList, childItems, root)
 
-    bookmarkList = []
-    for rootKey in data['roots']:
-        root = data['roots'][rootKey]
-        try:
-            childItems = root['children']
-        except Exception:
-            continue
-        bookmarkList = makeList(bookmarkList, childItems, rootKey)
+        for index in range(len(bookmarkList)):
+            url = bookmarkList[index]['url']
+            netLocation = urlparse(url).netloc
+            if netLocation in iconList.keys():
+                bookmarkList[index]['iconId'] = iconList[netLocation]
+            else:
+                bookmarkList[index]['iconId'] = 0
+        return bookmarkList
 
-    for index in range(len(bookmarkList)):
-        url = bookmarkList[index]['url']
-        netLocation = urlparse(url).netloc
-        if netLocation in iconList.keys():
-            bookmarkList[index]['iconId'] = iconList[netLocation]
-        else:
-            bookmarkList[index]['iconId'] = 0
+
+# class getBookmarks:
+class getBookmarks(Wox):
+    cache = chromeCache()
+    createIcon(cache.bitmapInfoList)
+    bookmarkList = cache.bookmarkList()
 
     def query(self, queryString):
-        urlIcon = './Images/chromeIcon.png'
         folderIcon = './Images/folderIcon.png'
-        result = []
+        result = list()
         bookmarkList = self.bookmarkList
 
-        queryStringLower = queryString.lower()
-        queryList = queryStringLower.split()
-        regexList = []
-        for query in queryList:
-            # pattern = '.*?'.join(query)
-            # regexList.append(re.compile(pattern))
-            regexList.append(re.compile(query))
+        regex = regexList(queryString)
 
         for bookmark in bookmarkList:
             title = bookmark['title']
             url = bookmark['url']
             path = bookmark['path']
             item = title + url + path
-            match = True
-            for regex in regexList:
-                match = regex.search(item.lower()) and match
-            if match:
+            if regex.match(item.lower()):
                 bookmarkIndex = bookmarkList.index(bookmark)
                 type = bookmark['type']
                 if type == 'folder':
                     if url in queryString:  # if already in target folder
-                        result.insert(0, {
-                            'Title': 'Parent: ' + path,
-                            'SubTitle': 'Press Enter to Return to Parent Folder',
-                            'IcoPath': folderIcon,
-                            'ContextData': bookmarkIndex,
-                            'JsonRPCAction': {
-                                'method': 'Wox.ChangeQuery',
-                                'parameters': ['bm ' + path, True],
-                                "doNotHideAfterAction".replace('oNo', 'on'): True
+                        result.insert(
+                            0,
+                            {
+                                'Title': 'Parent: ' + path,
+                                'SubTitle': 'Press Enter to Return to Parent Folder',
+                                'IcoPath': folderIcon,
+                                'ContextData': bookmarkIndex,
+                                'JsonRPCAction': {
+                                    'method': 'Wox.ChangeQuery',
+                                    'parameters': ['bm ' + path, True],
+                                    "doNotHideAfterAction".replace('oNo', 'on'): True
+                                }
                             }
-                        }
-                                      )
+                        )
                     else:
                         result.append(
                             {
