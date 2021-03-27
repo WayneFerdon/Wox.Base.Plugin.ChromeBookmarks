@@ -130,11 +130,11 @@ class chromeCache:
             )
         iconList = dict()
         for url, iconId in urlList:
-            netLocation = urlparse(url).netloc
-            if netLocation not in iconList.keys():
+            # netLocation = urlparse(url).netloc
+            if url not in iconList.keys():
                 iconList.update(
                     {
-                        netLocation: iconId
+                        url: iconId
                     }
                 )
         return bitmapInfoList, iconList
@@ -152,9 +152,9 @@ class chromeCache:
                     hisList[itemIndex]['lastVisitTime'] = lastVisitTime
             else:
                 items.append(item)
-                netLocation = urlparse(url).netloc
-                if netLocation in iconList.keys():
-                    iconId = iconList[netLocation]
+                # netLocation = urlparse(url).netloc
+                if url in iconList.keys():
+                    iconId = iconList[url]
                 else:
                     iconId = 0
                 hisList.append(
@@ -182,9 +182,9 @@ class chromeCache:
 
         for index in range(len(bookmarkList)):
             url = bookmarkList[index]['url']
-            netLocation = urlparse(url).netloc
-            if netLocation in iconList.keys():
-                bookmarkList[index]['iconId'] = iconList[netLocation]
+            # netLocation = urlparse(url).netloc
+            if url in iconList.keys():
+                bookmarkList[index]['iconId'] = iconList[url]
             else:
                 bookmarkList[index]['iconId'] = 0
         return bookmarkList
