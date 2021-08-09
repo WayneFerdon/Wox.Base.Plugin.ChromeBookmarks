@@ -11,6 +11,7 @@ import sqlite3
 import shutil
 from urllib.parse import urlparse
 
+TargetPlatform = "Chrome" # Chrome, Edge
 
 class regexList:
     def __init__(self, queryString):
@@ -65,7 +66,10 @@ def makeList(itemsList, childItems, pathFolder):
 class chromeCache:
     def __init__(self):
         localAppData = os.environ['localAppData'.upper()]
-        self.__dataPath__ = localAppData + '/Google/Chrome/User Data/Default'
+        if(TargetPlatform == "Chrome"):
+            self.__dataPath__ = localAppData + '/Google/Chrome/User Data/Default'
+        elif(TargetPlatform == "Edge"):
+            self.__dataPath__ = localAppData + '/Microsoft/Edge/User Data/Default'
         self.bitmapInfoList, self.iconList = self._iconInfo_()
 
     def _iconData_(self):
@@ -245,7 +249,10 @@ class getBookmarks(Wox):
                     if bookmark['iconId'] != 0:
                         iconPath = './Images/iconId{}.png'.format(bookmark['iconId'])
                     else:
-                        iconPath = './Images/chromeIcon.png'
+                    	if(TargetPlatform == "Chrome"):
+                    		iconPath = './Images/chromeIcon.png'
+                    	elif(TargetPlatform == "Edge"):
+                    		iconPath = './Images/edgeIcon.png'
                     result.append(
                         {
                             'Title': title,
@@ -270,7 +277,10 @@ class getBookmarks(Wox):
             iconPath = './Images/iconId{}.png'.format(bookmark['iconId'])
         else:
             if bookmark['type'] != 'folder':
-                iconPath = './Images/chromeIcon.png'
+            	if(TargetPlatform == "Chrome"):
+            		iconPath = './Images/chromeIcon.png'
+            	elif(TargetPlatform == "Edge"):
+            		iconPath = './Images/edgeIcon.png'
             else:
                 iconPath = './Images/folderIcon.png'
         results = [
