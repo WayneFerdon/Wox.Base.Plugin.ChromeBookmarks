@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # require pypiwin32, can be install by pip
+import imp
 from wox import Wox, WoxAPI
 import re
 import webbrowser
@@ -9,7 +10,7 @@ import win32con
 import win32clipboard
 import sqlite3
 import shutil
-from urllib.parse import urlparse
+import sys
 
 TargetPlatform = "Chrome" # Chrome, Edge
 
@@ -137,7 +138,6 @@ class chromeCache:
             )
         iconList = dict()
         for url, iconId in urlList:
-            # netLocation = urlparse(url).netloc
             if url not in iconList.keys():
                 iconList.update(
                     {
@@ -159,7 +159,6 @@ class chromeCache:
                     hisList[itemIndex]['lastVisitTime'] = lastVisitTime
             else:
                 items.append(item)
-                # netLocation = urlparse(url).netloc
                 if url in iconList.keys():
                     iconId = iconList[url]
                 else:
@@ -189,7 +188,6 @@ class chromeCache:
 
         for index in range(len(bookmarkList)):
             url = bookmarkList[index]['url']
-            # netLocation = urlparse(url).netloc
             if url in iconList.keys():
                 bookmarkList[index]['iconId'] = iconList[url]
             else:
@@ -252,10 +250,10 @@ class getBookmarks(Wox):
                     if bookmark['iconId'] != 0:
                         iconPath = './Images/iconId{}.png'.format(bookmark['iconId'])
                     else:
-                    	if(TargetPlatform == "Chrome"):
-                    		iconPath = './Images/chromeIcon.png'
-                    	elif(TargetPlatform == "Edge"):
-                    		iconPath = './Images/edgeIcon.png'
+                        if(TargetPlatform == "Chrome"):
+                            iconPath = './Images/chromeIcon.png'
+                        elif(TargetPlatform == "Edge"):
+                            iconPath = './Images/edgeIcon.png'
                     result.append(
                         {
                             'Title': title,
@@ -280,12 +278,13 @@ class getBookmarks(Wox):
             iconPath = './Images/iconId{}.png'.format(bookmark['iconId'])
         else:
             if bookmark['type'] != 'folder':
-            	if(TargetPlatform == "Chrome"):
-            		iconPath = './Images/chromeIcon.png'
-            	elif(TargetPlatform == "Edge"):
-            		iconPath = './Images/edgeIcon.png'
+                if(TargetPlatform == "Chrome"):
+                    iconPath = './Images/chromeIcon.png'
+                elif(TargetPlatform == "Edge"):
+                    iconPath = './Images/edgeIcon.png'
             else:
                 iconPath = './Images/folderIcon.png'
+        iconPath = os.path.join(os.path.abspath('./'),iconPath)
         results = [
             {
                 'Title': 'URL: ' + url,
