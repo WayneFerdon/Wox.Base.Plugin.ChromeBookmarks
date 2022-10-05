@@ -2,8 +2,8 @@
 # Author: wayneferdon wayneferdon@hotmail.com
 # Date: 2022-10-05 16:16:00
 # LastEditors: wayneferdon wayneferdon@hotmail.com
-# LastEditTime: 2022-10-05 17:35:50
-# FilePath: \undefinedc:\users\wayneferdon\appdata\local\wox\app-1.4.1196\plugins\wox.plugin.chromebookmarks\WoxQuery.py
+# LastEditTime: 2022-10-05 17:57:53
+# FilePath: \Wox.Plugin.ChromeBookmarks\WoxQuery.py
 # ----------------------------------------------------------------
 # Copyright (c) 2022 by Wayne Ferdon Studio. All rights reserved.
 # Licensed to the .NET Foundation under one or more agreements.
