@@ -2,7 +2,7 @@
 # Author: wayneferdon wayneferdon@hotmail.com
 # Date: 2022-10-05 16:15:12
 # LastEditors: wayneferdon wayneferdon@hotmail.com
-# LastEditTime: 2022-10-05 17:57:56
+# LastEditTime: 2022-10-05 18:13:58
 # FilePath: \Wox.Plugin.ChromeBookmarks\RegexList.py
 # ----------------------------------------------------------------
 # Copyright (c) 2022 by Wayne Ferdon Studio. All rights reserved.
@@ -29,5 +29,5 @@ class RegexList:
     def match(self, item: str):
         match = True
         for regex in self.regexList:
-            match = regex.search(item) and match
+            match = regex.search(item.lower()) and match
         return match

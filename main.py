@@ -2,7 +2,7 @@
 # Author: wayneferdon wayneferdon@hotmail.com
 # Date: 2022-02-12 06:25:49
 # LastEditors: wayneferdon wayneferdon@hotmail.com
-# LastEditTime: 2022-10-05 17:57:47
+# LastEditTime: 2022-10-05 18:14:02
 # FilePath: \Wox.Plugin.ChromeBookmarks\main.py
 # ----------------------------------------------------------------
 # Copyright (c) 2022 by Wayne Ferdon Studio. All rights reserved.
@@ -22,7 +22,7 @@ class GetBookmarks(ChromeWox):
 
     def getResult(self, regex, data:Bookmark):
         item = data.title + data.url + data.path + '/'
-        if not regex.match(item.lower()):
+        if not regex.match(item):
             return
         if data.type == Bookmark.Type.url:
             if data.iconID != 0:
