@@ -2,7 +2,7 @@
 # Author: wayneferdon wayneferdon@hotmail.com
 # Date: 2022-10-05 16:08:29
 # LastEditors: wayneferdon wayneferdon@hotmail.com
-# LastEditTime: 2022-10-05 17:58:10
+# LastEditTime: 2022-10-05 18:58:04
 # FilePath: \Wox.Plugin.ChromeBookmarks\ChromeCache.py
 # ----------------------------------------------------------------
 # Copyright (c) 2022 by Wayne Ferdon Studio. All rights reserved.
@@ -145,23 +145,24 @@ class Cache:
     def getHistories(self) -> list[History]:
         historyInfos = self._loadHisData_()
         iconDict = self.iconDict
-        histories = list[History]()
-        items = list[str]()
+        histories = dict[str, History]()
         for url, title, lastVisitTime in historyInfos:
-            item = url + title
-            if item in items:
-                itemIndex = items.index(item)
-                if histories[itemIndex].lastVisitTime < lastVisitTime:
-                    histories[itemIndex].lastVisitTime = lastVisitTime
+            key = url + title
+            if key in histories.keys():
+                if histories[key].lastVisitTime < lastVisitTime:
+                    histories[key].lastVisitTime = lastVisitTime
             else:
-                items.append(item)
                 if url in iconDict.keys():
                     iconID = iconDict[url]
                 else:
                     iconID = 0
-                histories.append(History(title,url,lastVisitTime,iconID))
-        histories.sort(key=lastVisitTime, reverse=True)
+                histories[key] = History(title,url,lastVisitTime, iconID)
+        histories = list(histories.values())
+        histories.sort(key=self.timeFromHisList, reverse=True)
         return histories
+
+    def timeFromHisList(self, history:History):
+        return history.lastVisitTime
 
     def getBookmarks(self) -> list[Bookmark]:
         bookmarks = list[Bookmark]()
@@ -175,7 +176,7 @@ class Cache:
             bookmarks.append(
                 Bookmark(root, root, GetInternalUrl(0), data['roots'][root]['id'], 0, Bookmark.Type.folder)
             )
-            bookmarks += self.getChildren(childItems, root, 0)
+            bookmarks += self.getChildrens(childItems, root, 0)
 
         for index in range(len(bookmarks)):
             url = bookmarks[index].url
@@ -185,7 +186,7 @@ class Cache:
                 bookmarks[index].iconID = 0
         return bookmarks
     
-    def getChildren(self, children:dict, ancestors:str, parentID:int) -> list[Bookmark]:
+    def getChildrens(self, children:dict, ancestors:str, parentID:int) -> list[Bookmark]:
         items = list()
         for item in children:
             title, id = item['name'], item['id']
@@ -194,6 +195,6 @@ class Cache:
                 url = item['url']
             else: # type == Bookmark.Type.folder
                 url = ancestors + '/' + item['name']
-                items += self.getChildren(item['children'], url, id)
+                items += self.getChildrens(item['children'], url, id)
             items.append(Bookmark(title, url, ancestors, id, parentID, type))
         return items
