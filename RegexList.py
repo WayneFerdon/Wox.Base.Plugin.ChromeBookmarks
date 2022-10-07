@@ -2,7 +2,7 @@
 # Author: wayneferdon wayneferdon@hotmail.com
 # Date: 2022-10-05 16:15:12
 # LastEditors: wayneferdon wayneferdon@hotmail.com
-# LastEditTime: 2022-10-05 18:13:58
+# LastEditTime: 2022-10-07 20:09:13
 # FilePath: \Wox.Plugin.ChromeBookmarks\RegexList.py
 # ----------------------------------------------------------------
 # Copyright (c) 2022 by Wayne Ferdon Studio. All rights reserved.
@@ -16,18 +16,18 @@ import re
 
 class RegexList:
     def __init__(self, queryString: str):
-        self.queryString = queryString.replace('[', '\[') \
+        self.queryString = queryString
+        queryList = RegexList.__replaceBrackets__(queryString).lower().split()
+        self.__regexs__ = [ re.compile(x) for x in queryList ]
+
+    def __replaceBrackets__(string:str):
+        return string.replace('[', '\[') \
             .replace(']', '\]') \
             .replace('(', '\(') \
             .replace(')', '\)')
-        queryStringLower = self.queryString.lower()
-        queryList = queryStringLower.split()
-        self.regexList = list[re.Pattern]()
-        for query in queryList:
-            self.regexList.append(re.compile(query))
 
     def match(self, item: str):
-        match = True
-        for regex in self.regexList:
-            match = regex.search(item.lower()) and match
-        return match
+        for regex in self.__regexs__:
+            if not regex.search(item.lower()):
+                return False
+        return True

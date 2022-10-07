@@ -2,7 +2,7 @@
 # Author: wayneferdon wayneferdon@hotmail.com
 # Date: 2022-10-05 17:07:35
 # LastEditors: wayneferdon wayneferdon@hotmail.com
-# LastEditTime: 2022-10-05 17:58:06
+# LastEditTime: 2022-10-07 19:58:31
 # FilePath: \Wox.Plugin.ChromeBookmarks\ChromeWox.py
 # ----------------------------------------------------------------
 # Copyright (c) 2022 by Wayne Ferdon Studio. All rights reserved.
@@ -11,7 +11,6 @@
 # See the LICENSE file in the project root for more information.
 # ----------------------------------------------------------------
 
-import os
 import webbrowser
 from ChromeCache import *
 from RegexList import *
@@ -20,25 +19,24 @@ from WoxQuery import *
 TargetPlatform = Platform.Chrome # Chrome, Edge
 
 class ChromeWox(WoxQuery):
-    cache = Cache(TargetPlatform)
-    PlatformIcon = cache.PlatformIcon
-    datas = list[ChromeData]()
+    Cache(TargetPlatform)
+    _datas_ = list[ChromeData]()
 
-    def getDatas(self) -> list[ChromeData]:
+    def _getDatas_(self) -> list[ChromeData]:
         return None
 
-    def getResult(self, regex:RegexList, data:ChromeData):
+    def _getResult_(self, regex:RegexList, data:ChromeData):
         return None
 
-    def extraContextMenu(self, data:ChromeData, iconPath:str):
+    def _extraContextMenu_(self, data:ChromeData, iconPath:str):
         return []
 
     def query(self, queryString:str):
         results = list()
         regex = RegexList(queryString)
-        self.datas = self.getDatas()()
-        for data in self.datas:
-            result = self.getResult(regex, data)
+        self._datas_ = self._getDatas_()
+        for data in self._datas_:
+            result = self._getResult_(regex, data)
             if result is None:
                 continue
             results.append(result)
@@ -46,23 +44,15 @@ class ChromeWox(WoxQuery):
 
     def context_menu(self, index:int):
         self.query('')
-        data = self.datas[index]
-        url = data.url
-        title = data.title
+        data = self._datas_[index]
 
-        if data.iconID != 0:
-            iconPath = './Images/icon{}.png'.format(data.iconID)
-        else:
-            iconPath = self.PlatformIcon
-        iconPath = os.path.join(os.path.abspath('./'),iconPath)
-        
         results = [
-            self.getCopyDataResult('URL', url, iconPath), 
-            self.getCopyDataResult('Title', title, iconPath)
+            self.getCopyDataResult('URL', data.url, data.icon), 
+            self.getCopyDataResult('Title', data.title, data.icon)
         ]
-        results += self.extraContextMenu(data, iconPath)
+        results += self._extraContextMenu_(data)
         return results
 
     @classmethod
-    def openUrl(cls, url:str):
+    def _openUrl_(cls, url:str):
         webbrowser.open(url)

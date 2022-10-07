@@ -2,7 +2,7 @@
 # Author: wayneferdon wayneferdon@hotmail.com
 # Date: 2022-10-05 16:08:29
 # LastEditors: wayneferdon wayneferdon@hotmail.com
-# LastEditTime: 2022-10-05 18:58:04
+# LastEditTime: 2022-10-07 20:21:13
 # FilePath: \Wox.Plugin.ChromeBookmarks\ChromeCache.py
 # ----------------------------------------------------------------
 # Copyright (c) 2022 by Wayne Ferdon Studio. All rights reserved.
@@ -19,79 +19,135 @@ import shutil
 from enum import Enum
 
 class Platform(Enum):
-    Chrome = 0,
+    Chrome = 0, 
     Edge = 1
 
-def GetInternalUrl(id: int):
+@staticmethod
+def getInternalUrl(id: int):
     if id == 0 or id == 1:
-        return 'chrome://bookmarks'
-    return 'chrome://bookmarks/?id=' + str(id)
+        return 'chrome://bookmarks/'
+    return 'chrome://bookmarks/?id=' + str(id) + '/'
 
 class ChromeData():
     class Type(Enum):
         url = 0, 
         folder = 1, 
-    
+
     def __init__(self, title:str, url:str, type:Type=Type.url):
         self.title = title
         self.url = url
         self.type = type
-        self.iconID = 0
+        match type:
+            case ChromeData.Type.folder:
+                self.icon = ChromeData.FOLDER_ICON
+            case ChromeData.Type.url:
+                iconID = Cache.getIconID(self.url)
+                if iconID != 0:
+                    iconPath = ChromeData.__getIconPath__(iconID)
+                else:
+                    iconPath = Cache.PLATFORM_ICON
+                self.icon = ChromeData.__getAbsPath__(iconPath)
+
+    @staticmethod
+    def __getAbsPath__(iconPath):
+        return os.path.join(os.path.abspath('./'), iconPath)
+
+    FOLDER_ICON = __getAbsPath__('./Images/folderIcon.png')
+
+    @staticmethod
+    def __getIconPath__(iconID):
+        return './Images/Temp/icon{}.png'.format(iconID)
 
 class Bookmark(ChromeData):
-    def __init__(self, title:str, url:str, path:str, id:int, directoryID:int, type:ChromeData.Type=ChromeData.Type.url):
-        ChromeData.__init__(self, title,url,type)
+    def __init__(self, title:str, url:str, path:str, id:int, directoryID:int, type:ChromeData.Type):
+        ChromeData.__init__(self, title, url, type)
         self.path = path
         self.id = id
-        self.directory = GetInternalUrl(directoryID)
+        self.directory = getInternalUrl(directoryID)
 
 class History(ChromeData):
-    def __init__(self, title:str, url:str, lastVisitTime:int, iconID:int):
+    def __init__(self, title:str, url:str, lastVisitTime:int):
         ChromeData.__init__(self, title, url)
         self.lastVisitTime = lastVisitTime
 
+class BitMap():
+    def __init__(self, image, width, height) -> None:
+        self.image = image
+        self.width = width
+        self.height = height
+
 class Cache:
-    def __init__(self, TargetPlatform):
-        localAppData = os.environ['localAppData'.upper()]
-        if(TargetPlatform == Platform.Chrome):
-            self.__dataPath__ = localAppData + '/Google/Chrome/User Data/Default'
-        elif(TargetPlatform == Platform.Edge):
-            self.__dataPath__ = localAppData + '/Microsoft/Edge/User Data/Default'
+    @staticmethod
+    def getIconID(url):
+        for keyURL in Cache.__ICON_DICT__.keys():
+            if url in keyURL:
+                return Cache.__ICON_DICT__[keyURL]
+        return 0
+
+    @staticmethod
+    def getHistories() -> list[History]:
+        historyInfos = Cache.__loadHistories__()
+        histories = dict[str, History]()
+        for url, title, lastVisitTime in historyInfos:
+            key = url + title
+            if key not in histories.keys():
+                histories[key] = History(title, url, lastVisitTime)
+                continue
+            if histories[key].lastVisitTime >= lastVisitTime:
+                continue
+            histories[key].lastVisitTime = lastVisitTime
+        histories = list(histories.values())
+        histories.sort(key=lambda history:history.lastVisitTime, reverse=True)
+        return histories
+
+    @staticmethod
+    def getBookmarks() -> list[Bookmark]:
+        def getChildren(children:dict, ancestors:str, parentID:int) -> list[Bookmark]:
+            bookmarks = list()
+            for item in children:
+                title, id = item['name'], item['id']
+                type = Bookmark.Type[item['type']]
+                match type:
+                    case Bookmark.Type.url:
+                        url = item['url']
+                    case Bookmark.Type.folder:
+                        url = ancestors + item['name'] + '/'
+                        bookmarks += getChildren(item['children'], url, id)
+                bookmarks.append(Bookmark(title, url, ancestors, id, parentID, type))
+            return bookmarks
         
-        if(TargetPlatform == Platform.Chrome):
-            self.PlatformIcon = './Images/chromeIcon.png'
-        elif(TargetPlatform == Platform.Edge):
-            self.PlatformIcon = './Images/edgeIcon.png'
-
-        bitmapInfos, self.iconDict = self._iconInfo_()
-        for iconID in bitmapInfos.keys():
-            imageData = bitmapInfos[iconID]['imageData']
+        data = Cache.__loadBookmarks__()
+        bookmarks = list[Bookmark]()
+        for root in data['roots']:
             try:
-                with open('./Images/icon{}.png'.format(iconID), 'wb') as f:
-                    f.write(imageData)
-            except PermissionError:
-                pass
+                childItems = data['roots'][root]['children']
+            except Exception:
+                continue
 
-    def _iconData_(self) -> str:
-        favIcons = self.__dataPath__ + '/Favicons'
-        iconData = self.__dataPath__ + '/FaviconsToRead'
-        shutil.copyfile(favIcons, iconData)
-        return iconData
+            bookmarks.append(Bookmark(root, root+ '/', getInternalUrl(0), data['roots'][root]['id'], 0, Bookmark.Type.folder))
+            bookmarks += getChildren(childItems, root + '/', 0)
+        return bookmarks
 
-    def _hisData_(self) -> str:
-        history = self.__dataPath__ + '/History'
-        hisData = self.__dataPath__ + '/HistoryToRead'
-        shutil.copyfile(history, hisData)
-        return hisData
+    @staticmethod
+    def __init__(TargetPlatform):
+        Cache.__setPlatform__(TargetPlatform)
+        Cache.__loadcons__()
+    
+    @staticmethod
+    def __setPlatform__(TargetPlatform):
+        localAppData = os.environ['localAppData'.upper()]
+        match TargetPlatform:
+            case Platform.Chrome:
+                Cache.PLATFORM_ICON = './Images/chromeIcon.png'
+                Cache.__DATA_PATH__ = '/Google/Chrome/'
+            case Platform.Edge:
+                Cache.PLATFORM_ICON = './Images/edgeIcon.png'
+                Cache.__DATA_PATH__ = '/Microsoft/Edge/'
+        Cache.__DATA_PATH__ = localAppData + Cache.__DATA_PATH__ + 'User Data/Default/'
 
-    def _loadBookmarkData_(self) -> str:
-        bookmark = self.__dataPath__ + '/Bookmarks'
-        with open(bookmark, 'r', encoding='UTF-8') as f:
-            bookmarkData = json.load(f)
-        return bookmarkData
-
-    def _loadIconData_(self) -> tuple[list, list]:
-        cursor = sqlite3.connect(self._iconData_()).cursor()
+    @staticmethod
+    def __loadcons__():
+        cursor = sqlite3.connect(Cache.__getReadOnlyData__('Favicons')).cursor()
         bitmapCursorResults = cursor.execute(
             'SELECT icon_id, image_data, width, height '
             'FROM favicon_bitmaps'
@@ -101,100 +157,48 @@ class Cache:
             'FROM icon_mapping'
         ).fetchall()
         cursor.close()
-        return bitmapCursorResults, urlCursorResults
+        bitmaps, urls = bitmapCursorResults, urlCursorResults
+        bitmapInfos = dict[int, BitMap]()
 
-    def _loadHisData_(self) -> list:
-        cursor = sqlite3.connect(self._hisData_()).cursor()
-        hisInfoList = cursor.execute(
+        for iconID, image, width, height in bitmaps:
+            if iconID in bitmapInfos.keys() \
+            and (width < bitmapInfos[iconID].width
+            or height < bitmapInfos[iconID].height):
+                continue
+            bitmapInfos[iconID] = BitMap(image,width,height)
+    
+        Cache.__ICON_DICT__ = dict[str, int]()
+        for url, iconID in urls:
+            Cache.__ICON_DICT__[url] = iconID
+
+        for iconID in bitmapInfos.keys():
+            imageData = bitmapInfos[iconID].image
+            try:
+                with open(ChromeData.__getIconPath__(iconID), 'wb') as f:
+                    f.write(imageData)
+            except PermissionError:
+                pass
+
+    @staticmethod
+    def __getReadOnlyData__(dataName):
+        sourceData = Cache.__DATA_PATH__ + dataName
+        readOnlyData = Cache.__DATA_PATH__ + dataName + 'ToRead'
+        shutil.copyfile(sourceData, readOnlyData)
+        return readOnlyData
+
+    @staticmethod
+    def __loadBookmarks__() -> str:
+        with open(Cache.__DATA_PATH__ + 'Bookmarks', 'r', encoding='UTF-8') as f:
+            bookmarkData = json.load(f)
+        return bookmarkData
+
+    @staticmethod
+    def __loadHistories__() -> list:
+        cursor = sqlite3.connect(Cache.__getReadOnlyData__('History')).cursor()
+        histories = cursor.execute(
             'SELECT urls.url, urls.title, urls.last_visit_time '
             'FROM urls, visits '
             'WHERE urls.id = visits.url'
         ).fetchall()
         cursor.close()
-        return hisInfoList
-
-    def _iconInfo_(self) -> tuple[dict, dict]:
-        bitmapList, urlList = self._loadIconData_()
-        bitmapInfoList = dict()
-        for iconID, imageData, width, height in bitmapList:
-            if iconID in bitmapInfoList.keys():
-                if (
-                        width < bitmapInfoList[iconID]['width']
-                        or height < bitmapInfoList[iconID]['height']
-                ):
-                    continue
-            bitmapInfoList.update(
-                {
-                    iconID: {
-                        'imageData': imageData, 
-                        'width': width, 
-                        'height': height
-                    }
-                }
-            )
-        iconList = dict()
-        for url, iconID in urlList:
-            if url not in iconList.keys():
-                iconList.update(
-                    {
-                        url: iconID
-                    }
-                )
-        return bitmapInfoList, iconList
-
-    def getHistories(self) -> list[History]:
-        historyInfos = self._loadHisData_()
-        iconDict = self.iconDict
-        histories = dict[str, History]()
-        for url, title, lastVisitTime in historyInfos:
-            key = url + title
-            if key in histories.keys():
-                if histories[key].lastVisitTime < lastVisitTime:
-                    histories[key].lastVisitTime = lastVisitTime
-            else:
-                if url in iconDict.keys():
-                    iconID = iconDict[url]
-                else:
-                    iconID = 0
-                histories[key] = History(title,url,lastVisitTime, iconID)
-        histories = list(histories.values())
-        histories.sort(key=self.timeFromHisList, reverse=True)
         return histories
-
-    def timeFromHisList(self, history:History):
-        return history.lastVisitTime
-
-    def getBookmarks(self) -> list[Bookmark]:
-        bookmarks = list[Bookmark]()
-        data = self._loadBookmarkData_()
-        iconDict = self.iconDict
-        for root in data['roots']:
-            try:
-                childItems = data['roots'][root]['children']
-            except Exception:
-                continue
-            bookmarks.append(
-                Bookmark(root, root, GetInternalUrl(0), data['roots'][root]['id'], 0, Bookmark.Type.folder)
-            )
-            bookmarks += self.getChildrens(childItems, root, 0)
-
-        for index in range(len(bookmarks)):
-            url = bookmarks[index].url
-            if url in iconDict.keys():
-                bookmarks[index].iconID = iconDict[url]
-            else:
-                bookmarks[index].iconID = 0
-        return bookmarks
-    
-    def getChildrens(self, children:dict, ancestors:str, parentID:int) -> list[Bookmark]:
-        items = list()
-        for item in children:
-            title, id = item['name'], item['id']
-            type = Bookmark.Type[item['type']]
-            if type == Bookmark.Type.url:
-                url = item['url']
-            else: # type == Bookmark.Type.folder
-                url = ancestors + '/' + item['name']
-                items += self.getChildrens(item['children'], url, id)
-            items.append(Bookmark(title, url, ancestors, id, parentID, type))
-        return items
