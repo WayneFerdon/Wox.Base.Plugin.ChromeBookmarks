@@ -22,4 +22,4 @@
 
     > it's for another plugin: [Wox.Plugin.ChromeHistory](https://github.com/wayneferdon/Wox.Plugin.ChromeHistory)
 
-4. To Change from flow launcher to legacy Wox launcher, see [Query.py: Line20](https://github.com/WayneFerdon/Wox.Plugin.ChromeBookmarks/blob/master/Query.py#L20) ~ [Query.py: Line20](https://github.com/WayneFerdon/Wox.Plugin.ChromeBookmarks/blob/master/Query.py#L42)
+4. To Change from flow launcher to legacy Wox launcher, see [Query.py: Line20](https://github.com/WayneFerdon/Wox.Plugin.ChromeBookmarks/blob/master/Query.py#L20) ~ [Query.py: Line42](https://github.com/WayneFerdon/Wox.Plugin.ChromeBookmarks/blob/master/Query.py#L42)
