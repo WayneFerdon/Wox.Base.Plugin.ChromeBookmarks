@@ -1,9 +1,9 @@
 # ----------------------------------------------------------------
 # Author: wayneferdon wayneferdon@hotmail.com
 # Date: 2022-02-12 06:25:49
-# LastEditors: wayneferdon wayneferdon@hotmail.com
-# LastEditTime: 2022-10-07 20:16:04
-# FilePath: \Wox.Plugin.ChromeBookmarks\main.py
+# LastEditors: WayneFerdon wayneferdon@hotmail.com
+# LastEditTime: 2023-03-04 13:47:57
+# FilePath: \Flow.Launcher.Plugin.ChromeBookmarks\main.py
 # ----------------------------------------------------------------
 # Copyright (c) 2022 by Wayne Ferdon Studio. All rights reserved.
 # Licensed to the .NET Foundation under one or more agreements.
@@ -12,12 +12,12 @@
 # ----------------------------------------------------------------
 
 # -*- coding: utf-8 -*-
-from ChromeWox import *
+from ChromeQuery import *
 
-class GetBookmarks(ChromeWox):
+class GetBookmarks(ChromeQuery):
     with(
         open('./plugin.json','r') as pluginJson,
-        open(os.environ['localAppData'.upper()] + '/../Roaming/Wox/Settings/Settings.json','r') as settingJson
+        open(Query.SettingPath,'r') as settingJson
     ):
         plugInID = json.load(pluginJson)['ID']
         __actionKeyword__ = json.load(settingJson)['PluginSettings']['Plugins'][plugInID]['ActionKeywords'][0]
@@ -31,12 +31,12 @@ class GetBookmarks(ChromeWox):
             return
         match data.type:
             case Bookmark.Type.url:
-                return WoxResult(data.title, data.url, data.icon, self._datas_.index(data), self._openUrl_.__name__, True, data.url).toDict()
+                return QueryResult(data.title, data.url, data.icon, self._datas_.index(data), self._openUrl_.__name__, True, data.url).toDict()
             case Bookmark.Type.folder:
                 if data.url == regex.queryString:
                     # if right in the quering folder, not return it
                     return
-                return WoxResult(data.title, data.url, data.icon, self._datas_.index(data), 'Wox.ChangeQuery', False, GetBookmarks.__actionKeyword__ + ' ' + data.url, True).toDict()
+                return QueryResult(data.title, data.url, data.icon, self._datas_.index(data), Launcher.GetAPIName(Launcher.API.ChangeQuery), False, GetBookmarks.__actionKeyword__ + ' ' + data.url, True).toDict()
 
     def _extraContextMenu_(self, data:Bookmark):
         return [self.getCopyDataResult('Directory', data.directory, ChromeData.FOLDER_ICON)]

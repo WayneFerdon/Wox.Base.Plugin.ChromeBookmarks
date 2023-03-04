@@ -1,9 +1,9 @@
 # ----------------------------------------------------------------
 # Author: wayneferdon wayneferdon@hotmail.com
 # Date: 2022-10-05 17:07:35
-# LastEditors: wayneferdon wayneferdon@hotmail.com
-# LastEditTime: 2022-10-07 19:58:31
-# FilePath: \Wox.Plugin.ChromeBookmarks\ChromeWox.py
+# LastEditors: WayneFerdon wayneferdon@hotmail.com
+# LastEditTime: 2023-03-04 13:55:43
+# FilePath: \Flow.Launcher.Plugin.ChromeBookmarks\ChromeQuery.py
 # ----------------------------------------------------------------
 # Copyright (c) 2022 by Wayne Ferdon Studio. All rights reserved.
 # Licensed to the .NET Foundation under one or more agreements.
@@ -14,11 +14,11 @@
 import webbrowser
 from ChromeCache import *
 from RegexList import *
-from WoxQuery import *
+from Query import *
 
 TargetPlatform = Platform.Chrome # Chrome, Edge
 
-class ChromeWox(WoxQuery):
+class ChromeQuery(Query):
     Cache(TargetPlatform)
     _datas_ = list[ChromeData]()
 

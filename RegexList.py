@@ -1,9 +1,9 @@
 # ----------------------------------------------------------------
 # Author: wayneferdon wayneferdon@hotmail.com
 # Date: 2022-10-05 16:15:12
-# LastEditors: wayneferdon wayneferdon@hotmail.com
-# LastEditTime: 2022-10-07 20:09:13
-# FilePath: \Wox.Plugin.ChromeBookmarks\RegexList.py
+# LastEditors: WayneFerdon wayneferdon@hotmail.com
+# LastEditTime: 2023-03-04 13:12:24
+# FilePath: \Flow.Launcher.Plugin.ChromeBookmarks\RegexList.py
 # ----------------------------------------------------------------
 # Copyright (c) 2022 by Wayne Ferdon Studio. All rights reserved.
 # Licensed to the .NET Foundation under one or more agreements.
