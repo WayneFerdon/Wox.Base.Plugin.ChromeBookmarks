@@ -2,8 +2,8 @@
 # Author: wayneferdon wayneferdon@hotmail.com
 # Date: 2022-10-05 16:16:00
 # LastEditors: WayneFerdon wayneferdon@hotmail.com
-# LastEditTime: 2023-03-04 14:11:16
-# FilePath: \Flow.Launcher.Plugin.TimeStampc:\Users\WayneFerdon\AppData\Local\FlowLauncher\app-1.14.0\Plugins\Flow.Launcher.Plugin.ChromeBookmarks\Query.py
+# LastEditTime: 2023-04-02 12:09:08
+# FilePath: \Flow.Launcher.Plugin.ChromeHistory\Query.py
 # ----------------------------------------------------------------
 # Copyright (c) 2022 by Wayne Ferdon Studio. All rights reserved.
 # Licensed to the .NET Foundation under one or more agreements.
@@ -21,32 +21,39 @@ from flowlauncher import FlowLauncher as LauncherBase
 # from wox import Wox as LauncherBase
 
 class Launcher(LauncherBase):
-    Name = 'Flow.Launcher' # or: 'Wox'
-    PathName = 'FlowLauncher' # or: 'Wox'
-
     class API(Enum):
-        ChangeQuery = 0, # change flow launcher query
-        RestartApp = 1, # restart Flow Launcher
-        SaveAppAllSettings = 2, #save all Flow Launcher settings
-        CheckForNewUpdate = 3, # check for new Flow Launcher update
+        ChangeQuery = 0, # change launcher query
+        RestartApp = 1, # restart Launcher
+        SaveAppAllSettings = 2, #save all Launcher settings
+        CheckForNewUpdate = 3, # check for new Launcher update
         ShellRun = 4, # run shell commands
-        CloseApp = 5, # close flow launcher
-        HideApp = 6, # hide flow launcher
-        ShowApp = 7, # show flow launcher
+        CloseApp = 5, # close launcher
+        HideApp = 6, # hide launcher
+        ShowApp = 7, # show launcher
         ShowMsg = 8, # show messagebox
         GetTranslation = 9, # get translation of current language
         OpenSettingDialog = 10, # open setting dialog
         GetAllPlugins = 11, # get all loaded plugins
-        StartLoadingBar = 12, # start loading animation in flow launcher
-        StopLoadingBar = 13, # stop loading animation in flow launcher
-        ReloadAllPluginData = 14, # reload all flow launcher plugins
+        StartLoadingBar = 12, # start loading animation in launcher
+        StopLoadingBar = 13, # stop loading animation in launcher
+        ReloadAllPluginData = 14, # reload all launcher plugins
 
-    
-    SettingPath = os.environ['localAppData'.upper()] + '/../Roaming/' + PathName + '/Settings/Settings.json'
+    @staticmethod
+    def GetSettingPath(PathName:str, isPortableMode:bool = False):
+        mode = 'Roaming' if isPortableMode else 'Local'
+        return os.environ['localAppData'.upper()] + '/../' + mode +'/' + PathName + '/Settings/Settings.json'
 
     @staticmethod
     def GetAPIName(api:API):
         return Launcher.Name + '.' + api.name
+    
+    Name = 'Flow.Launcher' # or: 'Wox'
+    PathName = 'FlowLauncher' # or: 'Wox'
+
+    SettingPath = GetSettingPath(PathName)
+    if not os.path.isfile(SettingPath):
+        SettingPath = GetSettingPath(PathName, True)
+
 
 class Query(Launcher):
 # class Query():
