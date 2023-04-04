@@ -6,7 +6,7 @@
     "Author": "Wayne Custaf Laqinoa Ferdon",
     "Version": "1.0.0",
     "Language": "python",
-    "Website": "https://github.com/wayneferdon/",
+    "Website": "https://github.com/wayneferdon/Wox.Base.Plugin.ChromeBookmarks",
     "IcoPath": "./Images/chromeIcon.png",
     "ExecuteFileName": "main.py"
 }
