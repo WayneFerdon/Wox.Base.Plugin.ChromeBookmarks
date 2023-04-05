@@ -2,8 +2,8 @@
 # Author: wayneferdon wayneferdon@hotmail.com
 # Date: 2022-02-12 06:25:49
 # LastEditors: WayneFerdon wayneferdon@hotmail.com
-# LastEditTime: 2023-04-03 01:03:29
-# FilePath: \Flow.Launcher.Plugin.ChromeBookmarks\main.py
+# LastEditTime: 2023-04-05 08:06:56
+# FilePath: \Plugins\Wox.Base.Plugin.ChromeBookmarks\main.py
 # ----------------------------------------------------------------
 # Copyright (c) 2022 by Wayne Ferdon Studio. All rights reserved.
 # Licensed to the .NET Foundation under one or more agreements.
@@ -14,39 +14,28 @@
 # -*- coding: utf-8 -*-
 import sys
 import os
-import json
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from WoxPluginBase_ChromeQuery import *
 
 class BookmarksQuery(ChromeQuery):
-    __actionKeyword__ = None
-
-    def _getDatas_(self):
+    def __getDatas__(self):
         return ChromeCache.getBookmarks()
 
-    def _getResult_(self, regex:RegexList, data:Bookmark):
-        BookmarksQuery.__actionKeyword__ = None
-        if BookmarksQuery.__actionKeyword__ is None:
-            with(
-                open('./plugin.json','r') as pluginJson
-            ):
-                plugInID = json.load(pluginJson)['ID']
-                BookmarksQuery.__actionKeyword__ = BookmarksQuery.GetActionKeyword(plugInID)
-
+    def __getResult__(self, regex:RegexList, data:Bookmark):
         item = f'{data.platform.name};{data.title};{data.path};{data.url}/'
         if not regex.match(item):
             return
         match data.type:
             case Bookmark.Type.url:
-                return QueryResult(data.platform.name + ' ' + data.title, data.url, data.icon, self._datas_.index(data), self._openUrl_.__name__, True, data.url).toDict()
+                return QueryResult(data.platform.name + ' ' + data.title, data.url, data.icon, self.__datas__.index(data), self.openUrl.__name__, True, data.url).toDict()
             case Bookmark.Type.folder:
                 if data.url == regex.queryString:
                     # if right in the quering folder, not return it
                     return
-                return QueryResult(data.platform.name + ' '  + data.title, data.url, data.icon, self._datas_.index(data), Launcher.GetAPI(Launcher.API.ChangeQuery), False, BookmarksQuery.__actionKeyword__ + ' ' + data.platform.name + ' '  + data.url, True).toDict()
+                return QueryResult(data.platform.name + ' '  + data.title, data.url, data.icon, self.__datas__.index(data), Launcher.API.ChangeQuery.name, False, Plugin.actionKeyword + ' ' + data.platform.name + ' '  + data.url, True).toDict()
 
-    def _extraContextMenu_(self, data:Bookmark):
+    def __extraContextMenu__(self, data:Bookmark):
         return [self.getCopyDataResult('Directory', data.directory, ChromeData.FOLDER_ICON)]
 
 if __name__ == '__main__':
