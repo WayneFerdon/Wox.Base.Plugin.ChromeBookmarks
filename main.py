@@ -33,7 +33,7 @@ class BookmarksQuery(ChromeQuery):
                 if data.url == regex.queryString:
                     # if right in the quering folder, not return it
                     return
-                return QueryResult(data.platform.name + ' '  + data.title, data.url, data.icon, self.__datas__.index(data), Launcher.API.ChangeQuery.name, False, Plugin.actionKeyword + ' ' + data.platform.name + ' '  + data.url, True).toDict()
+                return QueryResult(data.platform.name + ' '  + data.title, data.url, data.icon, self.__datas__.index(data), LauncherAPI.ChangeQuery.name, False, Plugin.actionKeyword + ' ' + data.platform.name + ' '  + data.url, True).toDict()
 
     def __extraContextMenu__(self, data:Bookmark):
         return [self.getCopyDataResult('Directory', data.directory, ChromeData.FOLDER_ICON)]
