@@ -2,8 +2,8 @@
 # Author: wayneferdon wayneferdon@hotmail.com
 # Date: 2022-02-12 06:25:49
 # LastEditors: WayneFerdon wayneferdon@hotmail.com
-# LastEditTime: 2023-04-05 08:06:56
-# FilePath: \Plugins\Wox.Base.Plugin.ChromeBookmarks\main.py
+# LastEditTime: 2023-04-23 16:58:56
+# FilePath: \FlowLauncher\Plugins\Wox.Base.Plugin.ChromeBookmarks\main.py
 # ----------------------------------------------------------------
 # Copyright (c) 2022 by Wayne Ferdon Studio. All rights reserved.
 # Licensed to the .NET Foundation under one or more agreements.
