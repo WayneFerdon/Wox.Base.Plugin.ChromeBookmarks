@@ -12,9 +12,9 @@
 # ----------------------------------------------------------------
 
 # -*- coding: utf-8 -*-
-import sys
-sys.path.append("../WoxBasePluginChromeQuery")
-from ChromeQuery import *
+import os, sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+from WoxBasePluginChromeQuery import *
 
 class BookmarksQuery(ChromeQuery):
     def __getDatas__(self):
@@ -26,15 +26,15 @@ class BookmarksQuery(ChromeQuery):
             return
         match data.type:
             case Bookmark.Type.url:
-                return QueryResult(data.platform.name + data.title, data.url, data.icon, self.__datas__.index(data), self.openUrl.__name__, True, data.url).toDict()
+                return QueryResult(data.platform.name + " " + data.title, data.url, data.icon, self.__datas__.index(data), self.openUrl.__name__, True, data.url).toDict()
             case Bookmark.Type.folder:
                 if data.url == regex.queryString:
                     # if right in the quering folder, not return it
                     return
-                return QueryResult(data.platform.name + data.title, data.url, data.icon, self.__datas__.index(data), LauncherAPI.ChangeQuery.name, False, Plugin.actionKeyword + ' ' + data.platform.name + ' '  + data.url, True).toDict()
+                return QueryResult(data.platform.name + " " + data.title, data.url, data.icon, self.__datas__.index(data), LauncherAPI.ChangeQuery.name, False, Plugin.actionKeyword + ' ' + data.platform.name + ' '  + data.url, True).toDict()
 
     def __extraContextMenu__(self, data:Bookmark):
-        return [self.getCopyDataResult('Directory', data.directory, ChromeData.FOLDER_ICON), self.getCopyDataResult('Directory', data.directory, ChromeData.FOLDER_ICON)]
+        return [self.getCopyDataResult('Directory Path', data.directory, ChromeData.FOLDER_ICON), self.getCopyDataResult('Directory', data.platform.name + data.path, ChromeData.FOLDER_ICON)]
 
 if __name__ == '__main__':
     BookmarksQuery()
